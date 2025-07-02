@@ -1,6 +1,6 @@
 extract this web folder or ```git clone https://https://github.com/SecretDiscorder/BTube-noffmpeg```
 
-go to ./install or localhost/install
+go to ./install or localhost/install or localhost/BTube-noffmpeg/install
 
 And follow that instructions.
 
