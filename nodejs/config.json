@@ -1,0 +1,16 @@
+{
+    "db_hostname": "localhost",
+    "db_username": "bimapus1_btube",
+    "db_password": "khbimakha23**32",
+    "db_dbname": "bimapus1_btube",
+    "site_url": "https:\/\/bima-pustaka.my.id",
+    "server_ip": "151.243.222.70",
+    "server_port": 4545,
+    "amazon": false,
+    "amazon_bucket": "",
+    "nodejs_message_update_interval": 500,
+    "ajax_message_update_interval": 3000,
+    "ssl": false,
+    "ssl_privatekey_full_path": "",
+    "ssl_cert_full_path": ""
+}

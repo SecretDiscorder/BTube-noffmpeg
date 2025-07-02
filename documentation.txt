@@ -1,0 +1,332 @@
+config.php
+changed database connection details and commented purchase code line
+
+install/index.php
+commented line 46 to 54
+
+assets/include/function_general.php
+added return array('status'=>'SUCCESS');
+to function check_($check) and function check_success($check)
+
+
+sources/home/content: added to everywhere there is 'VIEWS' => number_format($video->views),
+'SCAM' => number_format($video->scam),
+'LEGIT' => number_format($video->legit),
+
+sources/home/content: added to everywhere there is 'VIEWS' => $get_video->views,
+'SCAM' => $get_video->scam,
+'LEGIT' => $get_video->legit,
+
+sources/watch/content: added to everywhere there is 'LIKES' => number_format($get_video->likes),
+'SCAM' => number_format($get_video->scam),
+'LEGIT' => number_format($get_video->legit),
+
+
+ajax/like-system.php 
+added the IF options
+else if ($_GET['first'] == 'legit') {
+    $db->where('user_id', $user->id);
+    $db->where('video_id', $id);
+    $db->where('type', 3);
+    $check_for_like = $db->getValue(T_DIS_LIKES, 'count(*)');
+    if ($check_for_like > 0) {
+        $db->where('user_id', $user->id);
+        $db->where('video_id', $id);
+        $db->where('type', 3);
+        $delete = $db->delete(T_DIS_LIKES);
+        $data   = array(
+            'status' => 200,
+            'type' => 'deleted_legit'
+        );
+    } 
+
+    else {
+        $db->where('user_id', $user->id);
+        $db->where('video_id', $id);
+        $db->where('type', 4);
+        $check_for_dislike = $db->getValue(T_DIS_LIKES, 'count(*)');
+        if ($check_for_dislike) {
+            $db->where('user_id', $user->id);
+            $db->where('video_id', $id);
+            $db->where('type', 4);
+            $delete = $db->delete(T_DIS_LIKES);
+        }
+        $insert_data = array(
+            'user_id' => $user->id,
+            'video_id' => $id,
+            'time' => time(),
+            'type' => 3
+        );
+        $insert      = $db->insert(T_DIS_LIKES, $insert_data);
+        if ($insert) {
+            $data = array(
+                'status' => 200,
+                'type' => 'added_legit'
+            );
+
+        }
+    }
+}
+else if ($_GET['first'] == 'scam') {
+    $db->where('user_id', $user->id);
+    $db->where('video_id', $id);
+    $db->where('type', 4);
+    $check_for_like = $db->getValue(T_DIS_LIKES, 'count(*)');
+    if ($check_for_like > 0) {
+        $db->where('user_id', $user->id);
+        $db->where('video_id', $id);
+        $db->where('type', 4);
+        $delete = $db->delete(T_DIS_LIKES);
+        $data   = array(
+            'status' => 200,
+            'type' => 'deleted_scam'
+        );
+    } 
+
+    else {
+        $db->where('user_id', $user->id);
+        $db->where('video_id', $id);
+        $db->where('type', 3);
+        $check_for_dislike = $db->getValue(T_DIS_LIKES, 'count(*)');
+        if ($check_for_dislike) {
+            $db->where('user_id', $user->id);
+            $db->where('video_id', $id);
+            $db->where('type', 3);
+            $delete = $db->delete(T_DIS_LIKES);
+        }
+        $insert_data = array(
+            'user_id' => $user->id,
+            'video_id' => $id,
+            'time' => time(),
+            'type' => 4
+        );
+        $insert      = $db->insert(T_DIS_LIKES, $insert_data);
+        if ($insert) {
+            $data = array(
+                'status' => 200,
+                'type' => 'added_scam'
+            );
+
+        }
+    }
+}
+
+ajax/like-system.php 
+edited notify function thus:
+if (in_array($data['type'], array('added_dislike','added_like','added_legit','added_scam'))) {
+    if ($video_data->user_id != $user->id) {
+        //$type    = ($data['type'] == 'added_dislike') ? 'disliked_ur_video' : 'liked_ur_video';
+        switch($data['type']){
+            case 'added_dislike': $type = 'disliked_ur_video';
+            break;
+            case 'added_like': $type = 'liked_ur_video';
+            break;
+            case 'added_legit': $type = 'legit_ur_video';
+            break;
+            case 'added_scam': $type = 'scammed_ur_video';
+            break; 
+        }
+        $uniq_id = $video_data->video_id;
+        $notif_data = array(
+            'notifier_id' => $pt->user->id,
+            'recipient_id' => $video_data->user_id,
+            'type' => $type,
+            'url' => "watch/$uniq_id",
+            'video_id' => $id,
+            'time' => time()
+        );
+        
+        pt_notify($notif_data);
+    }
+}
+
+==================================================
+assets/include/function_one
+function PT_GetVideoByID()
+
+$get_video->is_legit = $db->where('user_id', $pt->user->id)->where('video_id', $get_video->id)->where('type', 3)->getValue(T_DIS_LIKES, 'count(*)');
+$get_video->is_scam = $db->where('user_id', $pt->user->id)->where('video_id', $get_video->id)->where('type', 4)->getValue(T_DIS_LIKES, 'count(*)');
+
+$db->where('video_id', $get_video->id);
+$db->where('type', 3);
+$get_video->legit = $db->getValue(T_DIS_LIKES, 'count(*)');
+
+$db->where('video_id', $get_video->id);
+$db->where('type', 4);
+$get_video->scam = $db->getValue(T_DIS_LIKES, 'count(*)');
+            
+==============================================================
+
+sources/watch/content.php & sources/home/content.php
+'VIEWS' => number_format($get_video->views),
+'LIKES' => number_format($get_video->likes),
+'DISLIKES' => number_format($get_video->dislikes),
+'SCAM' => number_format($get_video->scam),
+'LEGIT' => number_format($get_video->legit),
+'LIKES_P' => $get_video->likes_percent,
+'DISLIKES_P' => $get_video->dislikes_percent,
+'RAEL_LIKES' => $get_video->likes,
+'RAEL_DISLIKES' => $get_video->dislikes,
+'RAEL_SCAM' => $get_video->scam,
+'RAEL_LEGIT' => $get_video->legit,
+'ISLIKED' => ($get_video->is_liked > 0) ? 'liked="true"' : '',
+'ISDISLIKED' => ($get_video->is_disliked > 0) ? 'disliked="true"' : '',
+'ISSCAM' => ($get_video->is_scam > 0) ? 'scam="true"' : '',
+'ISLEGIT' => ($get_video->is_legit > 0) ? 'legit="true"' : '',
+'LIKE_ACTIVE_CLASS' => ($get_video->is_liked > 0) ? 'active' : '',
+'DIS_ACTIVE_CLASS' => ($get_video->is_disliked > 0) ? 'active' : '',
+'SCAM_ACTIVE_CLASS' => ($get_video->is_scam > 0) ? 'active' : '',
+'LEGIT_ACTIVE_CLASS' => ($get_video->is_legit > 0) ? 'active' : '', 
+
+============================================================
+
+themes->default->layout->home->list: replaced 7.8k scam and Legit
+{{SCAM}} {{LEGIT}}
+
+============================================================
+
+themes->default->layout->home->list: added html span for
+<div class="video-list-by">
+    <span>
+        <a href="{{USER url}}" data-load="?link1=timeline&id={{USER username}}">{{USER name_v}}</a>
+        <span class="bold">|</span> <span>{{TIME}}</span>
+    </span><br/>
+    <span>{{VIEWS}} {{LANG views}}</span> <span class="bold">|</span> <span class=""><span>7.8k scam</span><span class="bold">|</span> <span>8.9k Legit</span></span>
+</div>
+
+themes->default->css->style.css line 204 : adjusted width to 200px
+
+=============================================================
+themes->default->layout->watch->content.html : commented line 448 to 453 and duplicated the likes and dislikes icon
+then edited the duplicate like this
+<div class="like-btn text-right {{DIS_ACTIVE_CLASS}}" id="dislikes-bar" onclick="Wo_LikeSystem('{{ID}}', 'dislike', this, 'is_ajax')" data-likes="{{RAEL_DISLIKES}}" {{ISDISLIKED}}>
+    <!-- <svg xmlns="http://www.w3.org/2000/svg" class="feather feather-thumbs-down" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19,15H23V3H19M15,3H6C5.17,3 4.46,3.5 4.16,4.22L1.14,11.27C1.05,11.5 1,11.74 1,12V14A2,2 0 0,0 3,16H9.31L8.36,20.57C8.34,20.67 8.33,20.77 8.33,20.88C8.33,21.3 8.5,21.67 8.77,21.94L9.83,23L16.41,16.41C16.78,16.05 17,15.55 17,15V5C17,3.89 16.1,3 15,3Z" /></svg> -->
+    <i class="fa fa-ban" style="font-size:16px"></i>
+    <span class="likes" id="dislikes">{{DISLIKES}}</span>
+</div>
+<div class="like-btn text-right {{DIS_ACTIVE_CLASS}}" id="dislikes-bar" onclick="Wo_LikeSystem('{{ID}}', 'dislike', this, 'is_ajax')" data-likes="{{RAEL_DISLIKES}}" {{ISDISLIKED}}>
+    <!-- <svg xmlns="http://www.w3.org/2000/svg" class="feather feather-thumbs-down" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M19,15H23V3H19M15,3H6C5.17,3 4.46,3.5 4.16,4.22L1.14,11.27C1.05,11.5 1,11.74 1,12V14A2,2 0 0,0 3,16H9.31L8.36,20.57C8.34,20.67 8.33,20.77 8.33,20.88C8.33,21.3 8.5,21.67 8.77,21.94L9.83,23L16.41,16.41C16.78,16.05 17,15.55 17,15V5C17,3.89 16.1,3 15,3Z" /></svg> -->
+    <i class="fa fa-check-circle-o" style="font-size:16px"></i>
+    <span class="likes" id="dislikes">{{DISLIKES}}</span>
+</div>
+
+
+
+========================================================
+themes/default/js/script.js
+add this to function Wo_LikeSystem
+if (type == 'legit') {
+      var legit = $(this_).attr('data-legit');
+      if ($(this_).attr('legit')) {
+         result = Number(legit) - 1;
+         $(this_).removeAttr('legit');
+         $(this_).removeClass('active');
+      } else {
+         result = Number(legit) + 1;
+         $(this_).attr('legit', true);
+         $(this_).addClass('active');
+      }
+      $(this_).attr('data-legit', result);
+      $('#legit').text(numberWithCommas(result));
+      if ($('#scam-bar').attr('data-legit') > 0) {
+         if ($('#scam-bar').hasClass('active')) {
+             $('#scam-bar').removeAttr('scam');
+             $('#scam-bar').removeClass('active');
+             result = Number($('#scam-bar').attr('data-legit')) - 1;
+             $('#scam').text(numberWithCommas(result));
+             $('#scam-bar').attr('data-legit', result);
+         }
+      }
+   } 
+    else if (type == 'scam') {
+      var scam = $(this_).attr('data-legit');
+      
+      if ($(this_).attr('scam')) {
+         result = Number(scam) - 1;
+         console.log(result);
+         $(this_).removeAttr('scam');
+         $(this_).removeClass('active');
+      } else {
+         result = Number(scam) + 1;
+         console.log(result);
+         $(this_).attr('scam', true);
+         $(this_).addClass('active');
+      }
+      $(this_).attr('data-likes', result);
+      $('#scam').text(numberWithCommas(result));
+      if ($('#legit-bar').attr('data-legit') > 0) {
+         if ($('#legit-bar').hasClass('active')) {
+             $('#legit-bar').removeAttr('legit');
+             $('#legit-bar').removeClass('active');
+             result = Number($('#legit-bar').attr('data-legit')) - 1;
+             $('#legit').text(numberWithCommas(result));
+             $('#legit-bar').attr('data-legit', result);
+         }
+      }
+}
+
+======================================================================
+VIDPLAY THEME
+======================================================================
+themes/vidplay/layout/container.html
+add class="side_open" to <body> tag
+
+<?php if ($pt->get_video->is_owner == false && $pt->config->donate_system == 'on' && !empty($pt->user_data->donation_paypal_email) && $pt->get_video->sell_video == 0) { ?>
+    <button class="btn btn_opts" onclick="location.href='https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business={{USER donation_paypal_email}}&lc=US&item_name=Donation+to+{{USER name}}&no_note=0&cn=&currency_code=USD&bn=PP-DonationsBF:btn_donateCC_LG.gif:NonHosted'">
+        <span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22,12V20A2,2 0 0,1 20,22H4A2,2 0 0,1 2,20V12A1,1 0 0,1 1,11V8A2,2 0 0,1 3,6H6.17C6.06,5.69 6,5.35 6,5A3,3 0 0,1 9,2C10,2 10.88,2.5 11.43,3.24V3.23L12,4L12.57,3.23V3.24C13.12,2.5 14,2 15,2A3,3 0 0,1 18,5C18,5.35 17.94,5.69 17.83,6H21A2,2 0 0,1 23,8V11A1,1 0 0,1 22,12M4,20H11V12H4V20M20,20V12H13V20H20M9,4A1,1 0 0,0 8,5A1,1 0 0,0 9,6A1,1 0 0,0 10,5A1,1 0 0,0 9,4M15,4A1,1 0 0,0 14,5A1,1 0 0,0 15,6A1,1 0 0,0 16,5A1,1 0 0,0 15,4M3,8V10H11V8H3M13,8V10H21V8H13Z" />
+            </svg>
+        </span> 
+        <p>{{LANG donate}}</p>
+    </button>
+<?php } ?>
+
+
+ajax/user.php
+
+// if (!empty($_POST['donation_paypal_email'])) {
+//     if (!filter_var($_POST['donation_paypal_email'], FILTER_VALIDATE_EMAIL)) {
+//         $errors[] = $error_icon . $lang->email_invalid_characters;
+//     }
+// }
+if (empty($_POST['crypto_wallet_address'])) {
+    $errors[] = $error_icon . 'Invalid Token Address';
+}
+
+themes/vidplay/layouts/settings/general
+change donation_paypal_email to crypto_wallet_address in forms
+
+
+home/content.html LINE 196
+change slidetoshow to 5
+
+
+in Settings/content
+
+$token_transactions = "";
+if ($pt->setting_page == 'token_transactions') {
+    $user_transactions  = $db->where("( (receiver_id = {$pt->user->id}) OR (sender_id = {$pt->user->id}) )")->orderBy('id', 'DESC')->get(T_TOKEN_TRANS);  
+    foreach ($user_transactions as $transaction) {
+        if($transaction->video_id){
+            $get_video = PT_GetVideoByID(3,0,0,2);
+            if($get_video){
+                $description = 'Donation for video titled : <br> <a href="'.$get_video->url.'">'.$get_video->title.'</a>"';
+            }
+        }elseif($transaction->mode == 'withdrawal') 
+            $description = 'Withdrawal';
+        else $description = 'Deposit';
+        $get_beneficiary = PT_UserData($transaction->receiver_id);
+        $beneficiary = '<a href="'.$get_beneficiary->url.'">'.$get_beneficiary->name.'</a>';
+        $pt->transaction_stat = $transaction->status;
+        $token_transactions .= PT_LoadPage("settings/includes/transactions-list",array(
+            'T_ID' => $transaction->id,
+            'T_REF' => $transaction->reference,
+            'T_DESCRIPTION' => $description,
+            'T_CREATED_AT' => date('M-d',$transaction->created_at),
+            'T_AMOUNT' => number_format($transaction->amount, 2),
+            'T_BENEFICIARY' => $beneficiary,
+        ));
+    }
+}
+

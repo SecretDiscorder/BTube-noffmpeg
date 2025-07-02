@@ -1,0 +1,47 @@
+in default/layout/watch/content
+run ajax frontend code for scam and legit
+
+get ajax call from backend to increment scam and legit count
+
+find other places in the script where scam and legit are supposed to appear
+
+replicate everything for vidplay layout
+
+DONATE button on default/layout/watch/content
+
+onclick donate, what should happen
+
+
+Wo_LikeSystem
+PT_Ajax_Requests_File
+
+
+PT_GetVideoByID in source/watch/content.php
+is where eloquent queries are run to get video
+
+getOne is a php database function to get one item in the table
+T_VIDEOS is a constant meaning videos..defined in assets/includes/tables.php
+
+click scam
+1. script to locate ajax
+2. route to ajax file
+3. ajax file and database execution
+4. return response
+4. script to apply response to html
+
+data-likes="{{RAEL_DISLIKES}}" {{ISDISLIKED}}
+
+number3
+RegisterPoint in like-system.php was not calculated for scam and legit
+located function in functions_one.php
+
+likes_dislikes table..
+use type 3 for legit, type 4 for scam
+change the scam and legit calculations from the video table
+
+in contents, get all the rael likes and rael dislikes
+
+=====================================================
+
+notify [type,admin]
+update users balance on frontend after withdrawal
